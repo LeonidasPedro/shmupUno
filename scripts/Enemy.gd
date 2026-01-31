@@ -1,38 +1,43 @@
-extends Node2D
+extends Area2D
 
-var bullet_scene = load("res://scenes/bullet.tscn")
+@export var speed = 100
+@export var health = 3
+@export var shoot_interval = 1.5
 
-@onready var player = get_parent().get_parent().get_node("Player")
+var bullet_scene = preload("res://scenes/bullet.tscn")
+@onready var timer = $Timer
 
 func _ready():
-	$Timer.set_wait_time(0.2)
-	$Timer.start()
-	pass 
+	add_to_group("Enemy")
+	timer.wait_time = shoot_interval
+	timer.start()
 
 func _process(delta):
-	rotate(1 * delta)
-	position.y += 80 * delta
+	position.y += speed * delta
 	
-func spawn_bullets():
-	
-	var b1 = bullet_scene.instantiate()
-	b1.position = self.position
-	b1.dir = Vector2(player.position.x - self.position.x, player.position.y - self.position.y).normalized()
-	
-	var b2 = bullet_scene.instantiate()
-	b2.position = self.position
-	b2.dir = Vector2(1,0)
-	
-	get_parent().add_child(b1)
-	get_parent().add_child(b2)
-	
-	pass
+	if position.y > get_viewport_rect().size.y + 50:
+		queue_free()
+
+func take_damage(amount):
+	health -= amount
+	if health <= 0:
+		die()
+
+func die():
+	# TODO: Add explosion
+	# TODO: Add score
+	queue_free()
 
 func _on_timer_timeout():
-	spawn_bullets()
-	pass # Replace with function body.
+	shoot()
 
-func handle_hit():
-	print("enemy_hit")
+func shoot():
+	var b = bullet_scene.instantiate()
+	b.position = position + Vector2(0, 16)
+	b.direction = Vector2(0, 1)
+	get_parent().add_child(b)
 
-
+func _on_area_entered(area):
+	if area.is_in_group("Player"):
+		area.take_damage(1)
+		take_damage(3) # Destroy enemy on collision with player

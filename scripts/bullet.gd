@@ -1,21 +1,15 @@
-extends Node2D
+extends Area2D
 
-var dir = Vector2(0, 0)
-
-func _ready():
-	pass 
+var speed = 400
+var direction = Vector2(0, 1)
 
 func _process(delta):
-	self.position += dir.rotated(self.rotation)
-	
-	if ($RayCast2D.is_colliding()):
-		print("hit")
-		get_tree().reload_current_scene()
-	pass
-	
-func screen_exited():
-	get_parent().remove_child(self)
+	position += direction * speed * delta
+
+func _on_visible_on_screen_notifier_2d_screen_exited():
 	queue_free()
 
-
-
+func _on_area_entered(area):
+	if area.is_in_group("Player"):
+		area.take_damage(1)
+		queue_free()
